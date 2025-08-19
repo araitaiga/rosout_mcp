@@ -147,5 +147,9 @@ def query_rosout(
     return {"results": results}
 
 
-if __name__ == "__main__":
+def main():
     app.run("stdio")
+
+
+if __name__ == "__main__":
+    main()

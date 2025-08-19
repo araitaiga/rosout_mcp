@@ -1,7 +1,8 @@
 [project]
 name = "rosout-mcp"
 version = "0.1.0"
-description = "Add your description here"
+description = "A tool to retrieve ROS2 rosout logs via MCP"
+license = "MIT"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -9,3 +10,6 @@ dependencies = [
     "mcp[cli]>=1.12.4",
     "pyyaml>=6.0.2",
 ]
+
+[project.scripts]
+rosout-mcp = "rosout_mcp.rosout_mcp:main"
