@@ -1,4 +1,4 @@
-## How to use
+# How to use
 
 1. Add this mcp server to your mcp.json as follows:  
 
@@ -24,7 +24,15 @@
 4. ros2 bag record /rosout
 5. Request: "Based on the rosbag output path from <step 3 path>, determine if there are any issues in the implementation of the node in this workspace."
 
-## uv
+# Local run
+
+## Install uv
+
+```sh
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+## uv run
 
 - <https://speakerdeck.com/mickey_kubo/pythonpatukeziguan-li-uv-wan-quan-ru-men?slide=5>
 - <https://zenn.dev/karaage0703/articles/bc369a11a82263>
@@ -38,17 +46,11 @@ uv add fastapi mcp PyYAML mcp[cli]
 uv run python3 rosout_mcp.py
 ```
 
-## uv install
-
-```sh
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
 ## Debug
 
 ```sh
 $ cd /path/to/your/project
-$ uv run mcp dev rosout_mcp.py
+$ uv run mcp dev src/rosout_mcp/rosout_mcp.py 
 
 Starting MCP inspector...
 ⚙️ Proxy server listening on 127.0.0.1:6277
