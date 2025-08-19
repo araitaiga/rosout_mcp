@@ -1,3 +1,29 @@
+## How to use
+
+1. Add this mcp server to your mcp.json as follows:  
+
+```json
+// mcp.json
+{
+  "mcpServers": {
+    "ros2_bag_log_server": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/araitaiga/rosout_mcp",
+        "rosout-mcp"
+      ]
+    },
+    // others
+  }
+}
+```
+
+2. Instruct to "add sufficient logging for runtime error analysis" to the target source code for improvement.
+3. Build & run.
+4. ros2 bag record /rosout
+5. Request: "Based on the rosbag output path from <step 3 path>, determine if there are any issues in the implementation of the node in this workspace."
+
 ## uv
 
 - <https://speakerdeck.com/mickey_kubo/pythonpatukeziguan-li-uv-wan-quan-ru-men?slide=5>
@@ -35,10 +61,3 @@ Use this token to authenticate requests or set DANGEROUSLY_OMIT_AUTH=true to dis
 
 Connect --> Tools  
 ![inspector](./images/inspector.png)
-
-## メモ
-
-1. 改善対象のソースコードに対して, "実行時エラーの解析のために必要十分なログを仕込んで"と指示  
-2. build & run
-3. ros2 bag record /rosout
-4. リクエスト "3の出力のpathのrosbagを参考に, このワークスペースのnodeの実装に不具合があるかどうか判定して"  
