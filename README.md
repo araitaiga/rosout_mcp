@@ -1,10 +1,9 @@
 ## uv
 
 - <https://speakerdeck.com/mickey_kubo/pythonpatukeziguan-li-uv-wan-quan-ru-men?slide=5>
-
 - <https://zenn.dev/karaage0703/articles/bc369a11a82263>
-
 - <https://zenn.dev/konoe_akitoshi/articles/babdc695e53826>
+- <https://www.bioerrorlog.work/entry/how-to-use-mcp-inspector>
 
 ```sh
 cd /path/to/your/project
