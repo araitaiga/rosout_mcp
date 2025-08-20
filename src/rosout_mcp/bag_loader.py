@@ -25,12 +25,35 @@ class BagLoader:
         conn.commit()
         return conn
 
-    def convert(self):
-        """rosbag(mcap or sqlite3) → sqlite DB"""
+    def _clear_db(self):
+        """Delete all existing log data"""
+        conn = sqlite3.connect(self.db_path)
+        cur = conn.cursor()
+        cur.execute("DELETE FROM logs")
+        conn.commit()
+        conn.close()
+
+    def convert(self, clear_existing=True):
+        """
+        Convert rosbag (mcap or sqlite3) to sqlite DB
+
+        Args:
+            clear_existing (bool): If True, delete existing data before conversion
+        """
+        # Initialize database
         conn = self._init_db()
+
+        # Clear existing data
+        if clear_existing:
+            print("Clearing existing data...")
+            self._clear_db()
+            # Reconnect after clearing (get new conn after clear)
+            conn.close()
+            conn = self._init_db()
+
         writer = conn.cursor()
 
-        # storage_options により mcap か sqlite3 を自動判別して読み込み
+        # Auto-detect mcap or sqlite3 format with storage_options
         storage_options = rosbag2_py.StorageOptions(
             uri=self.bag_path, storage_id="")
         converter_options = rosbag2_py.ConverterOptions(
@@ -41,10 +64,19 @@ class BagLoader:
         reader = rosbag2_py.SequentialReader()
         reader.open(storage_options, converter_options)
 
+        # Get topic and type information in advance
+        topics_and_types = reader.get_all_topics_and_types()
+        log_topics = []
+        for topic_metadata in topics_and_types:
+            if topic_metadata.type == "rcl_interfaces/msg/Log":
+                log_topics.append(topic_metadata.name)
+
+        count = 0
         while reader.has_next():
             topic, data, t = reader.read_next()
 
-            if "rcl_interfaces/msg/Log" not in topic:
+            # Process only log topics
+            if topic not in log_topics:
                 continue
 
             msg_type = get_message("rcl_interfaces/msg/Log")
@@ -55,6 +87,8 @@ class BagLoader:
                 (msg.stamp.sec * 10**9 + msg.stamp.nanosec,
                  msg.name, msg.level, msg.msg)
             )
+            count += 1
 
         conn.commit()
         conn.close()
+        print(f"Conversion completed: {count} logs saved.")
