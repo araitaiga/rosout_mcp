@@ -1,41 +1,81 @@
 from bag_loader import BagLoader
+from db_manager import FileDatabaseManager
+from db_manager import InMemoryDatabaseManager
 from sqlite_query import SQLiteQuery
 
 
-def main():
-    db_path = "./data/rosout_test.db"
-    bag_path = "./data/rosout_test"  # mcap
+def demo_file_based_workflow():
+    """Demonstrate file-based database workflow with dependency injection."""
+    print("="*60)
+    print("=== File-Based Database Workflow ===")
+    print("="*60)
 
-    print("=== Duplicate Data Problem Solutions ===")
-    print("You can choose from the following options:")
-    print("1. clear_existing=True (default): Delete existing data before conversion each time")
-    print("2. clear_existing=False: Add data (traditional behavior, with duplicates)")
-    print()
+    bag_path = "./data/rosbag2_2025_08_12-17_26_19"
+    db_path = "./data/rosout_demo.db"
 
-    # Option 1: Clear DB before conversion each time (recommended)
-    print(">>> Using Option 1: Clear existing data before conversion")
-    loader = BagLoader(bag_path, db_path)
-    loader.convert(clear_existing=True)  # Default, so can be omitted
+    # Create database manager
+    db_manager = FileDatabaseManager(db_path)
 
-    # Option 2 example (commented out):
-    # print(">>> Using Option 2: Add data (possible duplicates)")
-    # loader = BagLoader(bag_path, db_path)
-    # loader.convert(clear_existing=False)
+    try:
+        print(f">>> Using file database: {db_path}")
+        print(">>> Database manager created successfully")
 
-    print()
+        # Create components with injected database manager
+        loader = BagLoader(bag_path, db_manager)
+        query = SQLiteQuery(db_manager)
 
-    # SQLite search
-    query = SQLiteQuery(db_path)
-    # print("Time range:", query.search_by_time_range(0, 1754896147385480395))
-    # print("Time range None:", query.search_by_time_range(None, None))
-    # print("Node filter:", query.search_by_node("rosbag2_recorder"))
-    # print("Level>=30:", query.search_by_level_range(30, None))
-    # print("Level<=20:", query.search_by_level_range(None, 20))
-    # print("Level>=20 and <=30:", query.search_by_level_range(20, 30))
-    # print("Message contains 'Subscribed':",
-    #       query.search_by_message("Subscribed"))
+        print(">>> BagLoader and SQLiteQuery created with shared database manager")
 
-    print("\n=== Use case examples for search method ===")
+        # Convert rosbag data
+        print("\n=== Converting RosBag Data ===")
+        loader.convert(clear_existing=True)
+
+        # Perform searches
+        perform_search_examples(query)
+
+    finally:
+        # Clean up
+        db_manager.close()
+        print(f"\n>>> Database closed: {db_path}")
+
+
+def demo_in_memory_workflow():
+    """Demonstrate in-memory database workflow with dependency injection."""
+    print("\n" + "="*60)
+    print("=== In-Memory Database Workflow ===")
+    print("="*60)
+
+    bag_path = "./data/rosbag2_2025_08_12-17_26_19"
+
+    # Create in-memory database manager
+    db_manager = InMemoryDatabaseManager()
+
+    try:
+        print(">>> Using in-memory database")
+        print(">>> Database manager created successfully")
+
+        # Create components with injected database manager
+        loader = BagLoader(bag_path, db_manager)
+        query = SQLiteQuery(db_manager)
+
+        print(">>> BagLoader and SQLiteQuery created with shared in-memory database")
+
+        # Convert rosbag data
+        print("\n=== Converting RosBag Data to Memory ===")
+        loader.convert(clear_existing=True)
+
+        # Perform searches
+        perform_search_examples(query)
+
+    finally:
+        # Clean up
+        db_manager.close()
+        print("\n>>> In-memory database closed")
+
+
+def perform_search_examples(query):
+    """Perform various search examples."""
+    print("\n=== Search Examples ===")
 
     # 1. Composite search specifying all conditions
     print("\n1. All conditions specified (time range + node + level range + message keyword):")
@@ -96,7 +136,36 @@ def main():
     # 7. No conditions (get all records)
     print("\n7. No conditions (get all records):")
     results = query.search()
-    print(f"   Result count: {len(results)}")
+    print(f"   Total logs: {len(results)}")
+
+    # 8. Error logs only
+    print("\n8. Error logs only:")
+    error_results = query.search(min_level=40)
+    print(f"   Error logs: {len(error_results)}")
+
+    # 9. Info logs only
+    print("\n9. Info logs only:")
+    info_results = query.search(min_level=20, max_level=20)
+    print(f"   Info logs: {len(info_results)}")
+
+
+def main():
+    """Main demonstration function."""
+    print("🚀 ROS Bag Log Analysis with Dependency Injection")
+    print("This demo shows both file-based and in-memory database approaches")
+    print("using the new dependency injection design.\n")
+
+    # Demo 1: File-based workflow
+    demo_file_based_workflow()
+
+    # Demo 2: In-memory workflow
+    demo_in_memory_workflow()
+
+    print("\n" + "="*60)
+    print("✅ Demo completed successfully!")
+    print("Both file-based and in-memory approaches work seamlessly")
+    print("with the new dependency injection design.")
+    print("="*60)
 
 
 if __name__ == "__main__":

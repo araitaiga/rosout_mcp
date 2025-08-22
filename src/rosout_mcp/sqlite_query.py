@@ -1,18 +1,27 @@
 import sqlite3
-from typing import List, Tuple
+from typing import List, Tuple, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from db_manager import DatabaseManager
 
 
 class SQLiteQuery:
-    def __init__(self, sqlite_path: str):
-        self.sqlite_path = sqlite_path
+    def __init__(self, db_manager: 'DatabaseManager'):
+        """
+        Initialize SQLiteQuery with database manager injection.
+
+        Args:
+            db_manager: DatabaseManager instance to use (required)
+        """
+        if db_manager is None:
+            raise ValueError(
+                "db_manager is required. Please provide a DatabaseManager instance.")
+
+        self.db_manager = db_manager
 
     def _execute(self, query: str, params: Tuple = ()) -> List[Tuple]:
-        conn = sqlite3.connect(self.sqlite_path)
-        cursor = conn.cursor()
-        cursor.execute(query, params)
-        results = cursor.fetchall()
-        conn.close()
-        return results
+        # Use database manager's execute method
+        return self.db_manager.execute(query, params)
 
     def search_by_time_range(self, start: int | None, end: int | None) -> List[Tuple]:
         if start is None and end is None:
