@@ -1,7 +1,11 @@
-from bag_loader import BagLoader
-from db_manager import FileDatabaseManager
-from db_manager import InMemoryDatabaseManager
-from sqlite_query import SQLiteQuery
+# Add src directory to PYTHONPATH
+import os
+import sys
+
+from src.rosout_mcp.bag_loader import BagLoader
+from src.rosout_mcp.db_manager import FileDatabaseManager
+from src.rosout_mcp.db_manager import InMemoryDatabaseManager
+from src.rosout_mcp.sqlite_query import SQLiteQuery
 
 
 def demo_file_based_workflow():

@@ -1,16 +1,14 @@
-import sqlite3
-from typing import TYPE_CHECKING
+import os
 
-if TYPE_CHECKING:
-    from db_manager import DatabaseManager
-
+from db_manager import DatabaseManager
 from rclpy.serialization import deserialize_message
 import rosbag2_py
 from rosidl_runtime_py.utilities import get_message
+import sqlite3
 
 
 class BagLoader:
-    def __init__(self, bag_path: str, db_manager: 'DatabaseManager'):
+    def __init__(self, bag_path: str, db_manager: DatabaseManager):
         """
         Initialize BagLoader with database manager injection.
 
@@ -36,6 +34,10 @@ class BagLoader:
         Args:
             clear_existing (bool): If True, delete existing data before conversion
         """
+        # Check if bag path exists
+        if not os.path.exists(self.bag_path):
+            raise FileNotFoundError(f"Bag path does not exist: {self.bag_path}")
+
         # Clear existing data
         if clear_existing:
             print("Clearing existing data...")

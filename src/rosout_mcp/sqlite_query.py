@@ -1,12 +1,10 @@
+from db_manager import DatabaseManager
 import sqlite3
-from typing import List, Tuple, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from db_manager import DatabaseManager
+from typing import List, Tuple
 
 
 class SQLiteQuery:
-    def __init__(self, db_manager: 'DatabaseManager'):
+    def __init__(self, db_manager: DatabaseManager):
         """
         Initialize SQLiteQuery with database manager injection.
 

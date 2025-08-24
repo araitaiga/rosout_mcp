@@ -1,0 +1,57 @@
+"""
+Common fixtures and helper functions for testing
+"""
+import os
+from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+from rosout_mcp.db_manager import InMemoryDatabaseManager
+from rosout_mcp.db_manager import FileDatabaseManager
+import pytest
+import tempfile
+
+
+@pytest.fixture
+def in_memory_db():
+    """In-memory database manager fixture"""
+    db_manager = InMemoryDatabaseManager()
+    yield db_manager
+    db_manager.close()
+
+
+@pytest.fixture
+def temp_file_db():
+    """Temporary file database manager fixture"""
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as temp_file:
+        temp_path = temp_file.name
+
+    db_manager = FileDatabaseManager(temp_path)
+    yield db_manager
+    db_manager.close()
+
+    # Delete file after test
+    if os.path.exists(temp_path):
+        os.unlink(temp_path)
+
+
+@pytest.fixture
+def sample_log_data():
+    """Sample log data for testing"""
+    return [
+        (1234567890000000000, "test_node_1", 20, "Info message 1"),
+        (1234567891000000000, "test_node_2", 30, "Warning message"),
+        (1234567892000000000, "test_node_1", 40, "Error message"),
+        (1234567893000000000, "test_node_3", 10, "Debug message"),
+        (1234567894000000000, "test_node_2", 20, "Info message 2"),
+    ]
+
+
+def insert_sample_data(db_manager, sample_data):
+    """Helper function to insert sample data into database"""
+    with db_manager.transaction() as cursor:
+        for timestamp, node, level, message in sample_data:
+            cursor.execute(
+                "INSERT INTO logs (timestamp, node, level, message) VALUES (?, ?, ?, ?)",
+                (timestamp, node, level, message)
+            )

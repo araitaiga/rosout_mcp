@@ -50,7 +50,7 @@ uv run python3 rosout_mcp.py
 
 ```sh
 $ cd /path/to/your/project
-$ uv run mcp dev src/rosout_mcp/rosout_mcp.py 
+$ uv run mcp dev src/rosout_mcp/rosout_db_mcp.py
 
 Starting MCP inspector...
 ⚙️ Proxy server listening on 127.0.0.1:6277
