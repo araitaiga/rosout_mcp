@@ -1,10 +1,11 @@
 import os
 
-from bag_loader import BagLoader
-from db_manager import InMemoryDatabaseManager
 from mcp.server.fastmcp import FastMCP
-from sqlite_query import SQLiteQuery
 from typing import Optional
+
+from .bag_loader import BagLoader
+from .db_manager import InMemoryDatabaseManager
+from .sqlite_query import SQLiteQuery
 
 # MCP server for managing ROS2 log database operations (in-memory version)
 # Provides tools for loading rosbag data, initializing database, and searching logs
@@ -184,6 +185,31 @@ def db_status() -> dict:
         return {
             "status": "error",
             "message": f"Failed to get database status: {str(e)}"
+        }
+
+
+@app.tool()
+def get_node_list() -> dict:
+    """
+    Get a list of unique node names from the database.
+
+    Returns:
+        Dictionary containing status and list of unique node names
+    """
+    try:
+        sql_query = SQLiteQuery(db_manager)
+        node_list = sql_query.get_node_list()
+
+        return {
+            "status": "success",
+            "node_count": len(node_list),
+            "nodes": node_list
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to get node list: {str(e)}"
         }
 
 

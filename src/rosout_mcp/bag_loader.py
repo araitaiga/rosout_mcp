@@ -1,10 +1,10 @@
 import os
 
-from db_manager import DatabaseManager
 from rclpy.serialization import deserialize_message
 import rosbag2_py
 from rosidl_runtime_py.utilities import get_message
-import sqlite3
+
+from .db_manager import DatabaseManager
 
 
 class BagLoader:
@@ -36,7 +36,8 @@ class BagLoader:
         """
         # Check if bag path exists
         if not os.path.exists(self.bag_path):
-            raise FileNotFoundError(f"Bag path does not exist: {self.bag_path}")
+            raise FileNotFoundError(
+                f"Bag path does not exist: {self.bag_path}")
 
         # Clear existing data
         if clear_existing:

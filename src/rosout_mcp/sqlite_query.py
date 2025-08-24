@@ -1,6 +1,6 @@
-from db_manager import DatabaseManager
-import sqlite3
 from typing import List, Tuple
+
+from .db_manager import DatabaseManager
 
 
 class SQLiteQuery:
@@ -71,6 +71,16 @@ class SQLiteQuery:
         return self._execute(
             "SELECT * FROM logs WHERE message LIKE ?", (f"%{keyword}%",)
         )
+
+    def get_node_list(self) -> List[str]:
+        """
+        Get a list of unique node names from the database.
+
+        Returns:
+            List of unique node names
+        """
+        results = self._execute("SELECT DISTINCT node FROM logs ORDER BY node")
+        return [row[0] for row in results]
 
     def search(
         self,
