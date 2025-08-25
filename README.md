@@ -6,7 +6,7 @@
 // mcp.json
 {
   "mcpServers": {
-    "ros2_bag_log_server": {
+    "rosout_db_server": {
       "command": "uvx",
       "args": [
         "--from",
@@ -32,33 +32,22 @@
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-## uv run
-
-- <https://speakerdeck.com/mickey_kubo/pythonpatukeziguan-li-uv-wan-quan-ru-men?slide=5>
-- <https://zenn.dev/karaage0703/articles/bc369a11a82263>
-- <https://zenn.dev/konoe_akitoshi/articles/babdc695e53826>
-- <https://www.bioerrorlog.work/entry/how-to-use-mcp-inspector>
+## Debugging
 
 ```sh
-cd /path/to/your/project
-uv init
-uv add fastapi mcp PyYAML mcp[cli]
-uv run python3 rosout_mcp.py
-```
-
-## Debug
-
-```sh
-$ cd /path/to/your/project
-$ uv run mcp dev src/rosout_mcp/rosout_db_mcp.py
+cd /path/to/rosout_mcp
+npx @modelcontextprotocol/inspector uv run rosout-mcp
 
 Starting MCP inspector...
-⚙️ Proxy server listening on 127.0.0.1:6277
+⚙️ Proxy server listening on localhost:6277
 🔑 Session token: ***
-Use this token to authenticate requests or set DANGEROUSLY_OMIT_AUTH=true to disable auth
+   Use this token to authenticate requests or set DANGEROUSLY_OMIT_AUTH=true to disable auth
 
-🔗 Open inspector with token pre-filled:
+🚀 MCP Inspector is up and running at:
    http://localhost:6274/?MCP_PROXY_AUTH_TOKEN=***
+
+🌐 Opening browser...
+
 ```
 
 Connect --> Tools  
