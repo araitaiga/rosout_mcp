@@ -1,201 +1,216 @@
-from datetime import datetime
-import json
-from typing import List, Optional
+import os
 
 from mcp.server.fastmcp import FastMCP
-from rcl_interfaces.msg import Log
-from rclpy.qos import QoSProfile
-import rclpy.serialization
-import rosbag2_py
+from typing import Optional
 
-# MCP server for analyzing ROS2 rosbag log messages
-# Provides tools to query, filter, and extract log data from rosbag files
-app = FastMCP("ros2_bag_log_server")
+from .bag_loader import BagLoader
+from .db_manager import InMemoryDatabaseManager
+from .sqlite_query import SQLiteQuery
 
-# ROS2 log level mapping from string names to integer values
-LOG_LEVELS = {
-    "DEBUG": Log.DEBUG,
-    "INFO": Log.INFO,
-    "WARN": Log.WARN,
-    "ERROR": Log.ERROR,
-    "FATAL": Log.FATAL,
-}
+# MCP server for managing ROS2 log database operations (in-memory version)
+# Provides tools for loading rosbag data, initializing database, and searching logs
+app = FastMCP("rosout_db_server")
 
-
-def parse_log_levels(levels: Optional[List[str]]) -> List[int]:
-    """
-    Parse log level specifications and convert to numeric level list.
-
-    Supports individual levels and minimum level specifications:
-    - Individual: ["ERROR", "WARN"] - only these specific levels
-    - Minimum: ["INFO+"] - INFO level and above
-
-    Args:
-        levels: List of log level names (case-insensitive) or None for all levels
-
-    Returns:
-        List of integer log levels sorted in ascending order
-
-    Raises:
-        ValueError: If an unknown log level is specified
-    """
-    if not levels:
-        return list(LOG_LEVELS.values())
-
-    result = []
-    for level in levels:
-        level = level.upper()
-        if level.endswith("+"):  # Handle minimum level specification (e.g., "INFO+")
-            base = level.replace("+", "")
-            if base in LOG_LEVELS:
-                min_val = LOG_LEVELS[base]
-                result.extend([v for v in LOG_LEVELS.values() if v >= min_val])
-        elif level in LOG_LEVELS:
-            result.append(LOG_LEVELS[level])
-        else:
-            raise ValueError(f"Unknown log level: {level}")
-    return sorted(set(result))
+# Global in-memory database manager instance
+# This ensures all operations share the same in-memory database
+db_manager = InMemoryDatabaseManager()
 
 
 @app.tool()
-def rosbag_info(bag_path: str) -> dict:
+def rosbag_load(bag_path: str) -> dict:
     """
-    Get comprehensive information about a ROS2 rosbag file.
+    Load rosbag data into in-memory database (append mode - does not clear existing data).
 
-    Provides an overview of the rosbag contents including all available
-    topics and their message types.
+    Converts ROS2 rosbag files to in-memory SQLite database format for efficient querying.
+    Data is appended to existing database without clearing previous records.
 
     Args:
         bag_path: Path to the rosbag directory or file (must be valid rosbag2 format)
 
     Returns:
-        Dictionary containing bag path and list of topics with names and types
+        Dictionary containing operation status and message
     """
-    reader = rosbag2_py.SequentialReader()
-    reader.open(
-        rosbag2_py.StorageOptions(uri=bag_path, storage_id='mcap'),
-        rosbag2_py.ConverterOptions('', '')
-    )
-    topics = reader.get_all_topics_and_types()
-    return {
-        "bag_path": bag_path,
-        "topics": [{"name": t.name, "type": t.type} for t in topics]
-    }
+    try:
+        if not os.path.exists(bag_path):
+            return {
+                "status": "error",
+                "message": f"Bag path does not exist: {bag_path}"
+            }
+
+        loader = BagLoader(bag_path, db_manager)
+        # Use clear_existing=False to append data without clearing existing records
+        loader.convert(clear_existing=False)
+
+        return {
+            "status": "success",
+            "message": f"Successfully loaded rosbag from {bag_path} to in-memory database"
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to load rosbag: {str(e)}"
+        }
 
 
 @app.tool()
-def get_log_topics(bag_path: str) -> dict:
+def db_init() -> dict:
     """
-    Extract all log topics from a ROS2 rosbag file.
+    Initialize in-memory database (clear all existing log data).
 
-    Filters the rosbag contents to find only topics that contain ROS2 log messages
-    (type 'rcl_interfaces/msg/Log'). Most ROS2 systems have "/rosout" as a log topic.
-
-    Args:
-        bag_path: Path to the rosbag directory or file
+    Removes all existing log records from the in-memory database.
+    Use this to start fresh or reset the database.
 
     Returns:
-        Dictionary containing bag path and list of topic names with log messages
+        Dictionary containing operation status and message
     """
-    reader = rosbag2_py.SequentialReader()
-    reader.open(
-        rosbag2_py.StorageOptions(uri=bag_path, storage_id='mcap'),
-        rosbag2_py.ConverterOptions('', '')
-    )
-    topics = reader.get_all_topics_and_types()
+    try:
+        # Clear existing data using the database manager
+        db_manager.clear_logs()
 
-    # Filter to only include topics with rcl_interfaces/msg/Log message type
-    log_topics = [
-        t.name for t in topics
-        if t.type == "rcl_interfaces/msg/Log"
-    ]
+        return {
+            "status": "success",
+            "message": "In-memory database initialized successfully"
+        }
 
-    return {
-        "bag_path": bag_path,
-        "log_topics": log_topics
-    }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to initialize database: {str(e)}"
+        }
 
 
 @app.tool()
-def query_rosout(
-    bag_path: str,
-    topic_name: Optional[str] = "/rosout",
+def db_search(
+    start_time: Optional[int] = None,
+    end_time: Optional[int] = None,
     node: Optional[str] = None,
-    start_time: Optional[float] = None,
-    end_time: Optional[float] = None,
-    log_levels: Optional[List[str]] = None,
-    min_level: Optional[str] = None,
+    min_level: Optional[int] = None,
+    max_level: Optional[int] = None,
+    message: Optional[str] = None
 ) -> dict:
     """
-    Query and filter log messages from a ROS2 rosbag file.
+    Search in-memory database logs with multiple filtering options.
 
-    Main tool for extracting and analyzing log data with comprehensive filtering
-    by time range, node name, and log levels. Ideal for debugging and analysis.
+    Provides comprehensive filtering capabilities for log analysis including
+    time range, node name, log levels, and message content search.
 
     Args:
-        bag_path: Path to the rosbag directory or file
-        topic_name: Log topic to query (default: "/rosout")
-        node: Filter by exact node name match
-        start_time: Start time filter (UNIX timestamp in seconds)
-        end_time: End time filter (UNIX timestamp in seconds)
-        log_levels: Specific log levels to include (e.g., ["ERROR", "FATAL"])
-        min_level: Minimum log level inclusive (e.g., "WARN" includes WARN, ERROR, FATAL)
+        start_time: Start time filter in nanoseconds (ignored if None)
+        end_time: End time filter in nanoseconds (ignored if None)
+        node: Filter by exact node name match (ignored if None)
+        min_level: Minimum log level inclusive (ignored if None)
+        max_level: Maximum log level inclusive (ignored if None)
+        message: Keyword to search in message content (ignored if None)
 
     Returns:
-        Dictionary containing filtered log messages with time, level, node, and message
+        Dictionary containing search results with status, count, and log data
     """
-    reader = rosbag2_py.SequentialReader()
-    reader.open(
-        rosbag2_py.StorageOptions(uri=bag_path, storage_id='mcap'),
-        rosbag2_py.ConverterOptions('', '')
-    )
+    try:
+        sql_query = SQLiteQuery(db_manager)
+        results = sql_query.search(
+            start_time=start_time,
+            end_time=end_time,
+            node=node,
+            min_level=min_level,
+            max_level=max_level,
+            message=message
+        )
 
-    # Prepare level filtering - combine log_levels and min_level specifications
-    allowed_levels = set()
-    if log_levels:
-        for level in log_levels:
-            if level in LOG_LEVELS:
-                allowed_levels.add(LOG_LEVELS[level])
-    if min_level and min_level in LOG_LEVELS:
-        min_level_val = LOG_LEVELS[min_level]
-        allowed_levels |= {
-            v for v in LOG_LEVELS.values() if v >= min_level_val}
+        # Convert tuple results to more readable format
+        formatted_results = []
+        for row in results:
+            formatted_results.append({
+                "timestamp": row[0],
+                "node": row[1],
+                "level": row[2],
+                "message": row[3]
+            })
 
-    results = []
-    while reader.has_next():
-        topic, data, t = reader.read_next()
-        if topic != topic_name:
-            continue
+        return {
+            "status": "success",
+            "count": len(results),
+            "data": formatted_results
+        }
 
-        # Deserialize the log message
-        msg = rclpy.serialization.deserialize_message(data, Log)
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to search database: {str(e)}"
+        }
 
-        # Apply time range filter
-        stamp_sec = msg.stamp.sec + msg.stamp.nanosec * 1e-9
-        if start_time and stamp_sec < start_time:
-            continue
-        if end_time and stamp_sec > end_time:
-            continue
 
-        # Apply node name filter (exact match)
-        if node and msg.name != node:
-            continue
+@app.tool()
+def db_status() -> dict:
+    """
+    Get in-memory database status and information.
 
-        # Apply log level filter
-        if allowed_levels and msg.level not in allowed_levels:
-            continue
+    Provides information about database record count and basic statistics.
 
-        # Convert log level integer back to string name
-        level_name = [k for k, v in LOG_LEVELS.items() if v == msg.level][0]
+    Returns:
+        Dictionary containing database status and statistics
+    """
+    try:
+        sql_query = SQLiteQuery(db_manager)
 
-        results.append({
-            "time": datetime.fromtimestamp(stamp_sec).isoformat(),
-            "level": level_name,
-            "node": msg.name,
-            "message": msg.msg,
-        })
+        # Get total record count
+        results = sql_query._execute("SELECT COUNT(*) FROM logs")
+        record_count = results[0][0] if results else 0
 
-    return {"results": results}
+        # Get time range
+        time_results = sql_query._execute(
+            "SELECT MIN(timestamp), MAX(timestamp) FROM logs"
+        )
+        min_time, max_time = time_results[0] if time_results else (None, None)
+
+        # Get unique nodes
+        node_results = sql_query._execute(
+            "SELECT COUNT(DISTINCT node) FROM logs"
+        )
+        unique_nodes = node_results[0][0] if node_results else 0
+
+        return {
+            "status": "success",
+            "db_type": "in-memory",
+            "db_exists": True,
+            "record_count": record_count,
+            "time_range": {
+                "min_timestamp": min_time,
+                "max_timestamp": max_time
+            },
+            "unique_nodes": unique_nodes
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to get database status: {str(e)}"
+        }
+
+
+@app.tool()
+def get_node_list() -> dict:
+    """
+    Get a list of unique node names from the database.
+
+    Returns:
+        Dictionary containing status and list of unique node names
+    """
+    try:
+        sql_query = SQLiteQuery(db_manager)
+        node_list = sql_query.get_node_list()
+
+        return {
+            "status": "success",
+            "node_count": len(node_list),
+            "nodes": node_list
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to get node list: {str(e)}"
+        }
 
 
 def main():
