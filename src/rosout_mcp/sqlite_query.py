@@ -72,16 +72,6 @@ class SQLiteQuery:
             "SELECT * FROM logs WHERE message LIKE ?", (f"%{keyword}%",)
         )
 
-    def get_node_list(self) -> List[str]:
-        """
-        Get a list of unique node names from the database.
-
-        Returns:
-            List of unique node names
-        """
-        results = self._execute("SELECT DISTINCT node FROM logs ORDER BY node")
-        return [row[0] for row in results]
-
     def search(
         self,
         start_time: int | None = None,
@@ -142,3 +132,13 @@ class SQLiteQuery:
         else:
             query = "SELECT * FROM logs WHERE " + " AND ".join(conditions)
             return self._execute(query, tuple(params))
+
+    def get_node_list(self) -> List[str]:
+        """
+        Get a list of unique node names from the database.
+
+        Returns:
+            List of unique node names
+        """
+        results = self._execute("SELECT DISTINCT node FROM logs ORDER BY node")
+        return [row[0] for row in results]

@@ -189,7 +189,7 @@ def db_status() -> dict:
 
 
 @app.tool()
-def get_node_list() -> dict:
+def node_list() -> dict:
     """
     Get a list of unique node names from the database.
 
