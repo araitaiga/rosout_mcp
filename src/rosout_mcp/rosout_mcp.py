@@ -164,15 +164,10 @@ def db_status() -> dict:
         min_time, max_time = time_results[0] if time_results else (None, None)
 
         # Get unique nodes
-        node_results = sql_query._execute(
-            "SELECT COUNT(DISTINCT node) FROM logs"
-        )
-        unique_nodes = node_results[0][0] if node_results else 0
+        unique_nodes = sql_query.get_node_list()
 
         return {
             "status": "success",
-            "db_type": "in-memory",
-            "db_exists": True,
             "record_count": record_count,
             "time_range": {
                 "min_timestamp": min_time,
