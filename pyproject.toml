@@ -37,6 +37,7 @@ addopts = [
     "--cov=src/rosout_mcp",
     "--cov-report=term-missing",
     "--cov-report=html",
+    "--cov-report=xml",
 ]
 markers = [
     "unit: Unit tests",
