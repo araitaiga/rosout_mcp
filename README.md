@@ -1,5 +1,8 @@
 # ROS2 Rosout MCP Server
 
+[![Test](https://github.com/araitaiga/rosout_mcp/actions/workflows/test.yml/badge.svg)](https://github.com/araitaiga/rosout_mcp/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/araitaiga/rosout_mcp/branch/main/graph/badge.svg)](https://codecov.io/gh/araitaiga/rosout_mcp)
+
 A Model Context Protocol (MCP) server that loads ROS2 rosbag files, builds an in-memory database, and provides SQL-like querying capabilities for ROS2 rosout logs.
 
 ## Overview
