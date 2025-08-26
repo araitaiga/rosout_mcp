@@ -1,6 +1,32 @@
-# How to use
+# ROS2 Rosout MCP Server
 
-1. Add this mcp server to your mcp.json as follows:  
+A Model Context Protocol (MCP) server that loads ROS2 rosbag files, builds an in-memory database, and provides SQL-like querying capabilities for ROS2 rosout logs.
+
+## Overview
+
+This package provides:
+
+- Load ROS2 rosbag files containing `/rosout` topic data
+- Build an in-memory SQLite database for efficient querying
+- Search and filter logs by time range, node name, log level, and message content
+
+## Prerequisites
+
+- **uv**: Fast Python package manager and installer
+- **Python**: >= 3.12
+- **ROS2**: For generating rosbag files (optional, if you have existing rosbag files)
+
+## Installation
+
+### Install uv
+
+```sh
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+### Install Rosout MCP from GitHub
+
+Add this MCP server to your `mcp.json` configuration:
 
 ```json
 {
@@ -12,42 +38,53 @@
         "git+https://github.com/araitaiga/rosout_mcp",
         "rosout-mcp"
       ]
-    },
+    }
   }
 }
 ```
 
-2. Instruct to "add sufficient logging for runtime error analysis" to the target source code for improvement.
-3. Build & run.
-4. ros2 bag record /rosout
-5. Request: "Based on the rosbag output path from <step 3 path>, determine if there are any issues in the implementation of the node in this workspace."
+## Usage
 
-# Local run
+1. **Prepare your ROS2 application** with sufficient logging for runtime analysis
+2. **Build and run** your ROS2 application
+3. **Record rosout data**:
 
-## Install uv
+   ```sh
+   ros2 bag record /rosout
+   ```
 
-```sh
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
+4. **Use MCP client** to analyze the recorded data:
+   - Example request: "Based on the rosbag output path from [your rosbag path], determine if there are any issues in the implementation of the node in this workspace."
+
+## Available MCP Tools
+
+- `rosbag_load`: Load ROS2 rosbag files into in-memory database
+- `db_search`: Search logs with filters (time range, node, log level, message content)
+- `db_status`: Get database statistics and information
+- `node_list`: List all unique node names in the database
+- `db_init`: Initialize/clear the in-memory database
 
 ## Debugging
+
+For local development and debugging:
 
 ```sh
 cd /path/to/rosout_mcp
 uv pip install -e .
 npx @modelcontextprotocol/inspector uv run rosout-mcp
-
-Starting MCP inspector...
-⚙️ Proxy server listening on localhost:6277
-🔑 Session token: ***
-   Use this token to authenticate requests or set DANGEROUSLY_OMIT_AUTH=true to disable auth
-
-🚀 MCP Inspector is up and running at:
-   http://localhost:6274/?MCP_PROXY_AUTH_TOKEN=***
-
-🌐 Opening browser...
-
 ```
 
-Connect --> Tools  
-![inspector](./images/inspector.png)
+This will start the MCP inspector at `http://localhost:6274` where you can:
+
+- Connect to the MCP server
+- Test available tools
+
+![MCP Inspector](./images/inspector.png)
+
+## Testing
+
+Run the test suite:
+
+```sh
+uv run pytest
+```

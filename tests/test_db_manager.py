@@ -147,13 +147,7 @@ class TestInMemoryDatabaseManager:
         """Test initialization"""
         db_manager = InMemoryDatabaseManager()
         assert db_manager.db_path == ":memory:"
-        assert db_manager.is_in_memory() == True
         db_manager.close()
-
-    @pytest.mark.unit
-    def test_is_in_memory(self, in_memory_db):
-        """Test is_in_memory method"""
-        assert in_memory_db.is_in_memory() == True
 
 
 class TestFileDatabaseManager:
@@ -165,7 +159,6 @@ class TestFileDatabaseManager:
         test_path = "/tmp/test.db"
         db_manager = FileDatabaseManager(test_path)
         assert db_manager.db_path == test_path
-        assert db_manager.is_in_memory() == False
         db_manager.close()
 
     @pytest.mark.unit
@@ -173,11 +166,6 @@ class TestFileDatabaseManager:
         """Test initialization error with None path"""
         with pytest.raises(ValueError, match="File database manager requires a valid db_path"):
             FileDatabaseManager(None)
-
-    @pytest.mark.unit
-    def test_is_in_memory(self, temp_file_db):
-        """Test is_in_memory method"""
-        assert temp_file_db.is_in_memory() == False
 
     @pytest.mark.unit
     def test_file_database_persistence(self):

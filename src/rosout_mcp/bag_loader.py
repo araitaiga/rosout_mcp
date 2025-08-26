@@ -1,6 +1,6 @@
+import logging
 import os
 
-import logging
 from rclpy.serialization import deserialize_message
 import rosbag2_py
 from rosidl_runtime_py.utilities import get_message
