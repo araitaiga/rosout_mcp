@@ -1,6 +1,14 @@
-from typing import List, Tuple
+from typing import List, NamedTuple, Tuple
 
 from .db_manager import DatabaseManager
+
+
+class DatabaseStatus(NamedTuple):
+    """Database status information."""
+    record_count: int
+    min_timestamp: int | None
+    max_timestamp: int | None
+    unique_nodes: List[str]
 
 
 class SQLiteQuery:
@@ -97,7 +105,7 @@ class SQLiteQuery:
         results = self._execute("SELECT DISTINCT node FROM logs ORDER BY node")
         return [row[0] for row in results]
 
-    def get_database_status(self) -> tuple[int, tuple[int | None, int | None], list[str]]:
+    def get_database_status(self) -> DatabaseStatus:
         """
         Get in-memory database status and information.
 
@@ -118,4 +126,4 @@ class SQLiteQuery:
         # Get unique nodes
         unique_nodes = self.get_node_list()
 
-        return record_count, (min_time, max_time), unique_nodes
+        return DatabaseStatus(record_count, min_time, max_time, unique_nodes)

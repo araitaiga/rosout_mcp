@@ -1,10 +1,17 @@
 import os
 
+import logging
 from rclpy.serialization import deserialize_message
 import rosbag2_py
 from rosidl_runtime_py.utilities import get_message
 
 from .db_manager import DatabaseManager
+
+# Constants
+NANOSECONDS_PER_SECOND = 10**9
+ROS_LOG_MESSAGE_TYPE = "rcl_interfaces/msg/Log"
+
+logger = logging.getLogger(__name__)
 
 
 class BagLoader:
@@ -23,10 +30,6 @@ class BagLoader:
         self.bag_path = bag_path
         self.db_manager = db_manager
 
-    def _clear_db(self):
-        """Delete all existing log data"""
-        self.db_manager.clear_logs()
-
     def convert(self, clear_existing=True):
         """
         Convert rosbag (mcap or sqlite3) to sqlite DB
@@ -39,20 +42,17 @@ class BagLoader:
             raise FileNotFoundError(
                 f"Bag path does not exist: {self.bag_path}")
 
-        # Clear existing data
+        # Clear existing data if requested
         if clear_existing:
-            print("Clearing existing data...")
-            self._clear_db()
+            logger.info("Clearing existing data...")
+            self.db_manager.clear_logs()
 
         # Use database manager's transaction for better error handling
         with self.db_manager.transaction() as cursor:
             # Auto-detect mcap or sqlite3 format with storage_options
             storage_options = rosbag2_py.StorageOptions(
                 uri=self.bag_path, storage_id="")
-            converter_options = rosbag2_py.ConverterOptions(
-                input_serialization_format="cdr",
-                output_serialization_format="cdr"
-            )
+            converter_options = rosbag2_py.ConverterOptions("", "")
 
             reader = rosbag2_py.SequentialReader()
             reader.open(storage_options, converter_options)
@@ -61,7 +61,7 @@ class BagLoader:
             topics_and_types = reader.get_all_topics_and_types()
             log_topics = []
             for topic_metadata in topics_and_types:
-                if topic_metadata.type == "rcl_interfaces/msg/Log":
+                if topic_metadata.type == ROS_LOG_MESSAGE_TYPE:
                     log_topics.append(topic_metadata.name)
 
             count = 0
@@ -72,14 +72,16 @@ class BagLoader:
                 if topic not in log_topics:
                     continue
 
-                msg_type = get_message("rcl_interfaces/msg/Log")
+                msg_type = get_message(ROS_LOG_MESSAGE_TYPE)
                 msg = deserialize_message(data, msg_type)
+
+                # Convert ROS timestamp to nanoseconds
+                timestamp_ns = msg.stamp.sec * NANOSECONDS_PER_SECOND + msg.stamp.nanosec
 
                 cursor.execute(
                     "INSERT INTO logs (timestamp, node, level, message) VALUES (?, ?, ?, ?)",
-                    (msg.stamp.sec * 10**9 + msg.stamp.nanosec,
-                     msg.name, msg.level, msg.msg)
+                    (timestamp_ns, msg.name, msg.level, msg.msg)
                 )
                 count += 1
 
-        print(f"Conversion completed: {count} logs saved.")
+        logger.info(f"Conversion completed: {count} logs saved.")

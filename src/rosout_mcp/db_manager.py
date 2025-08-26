@@ -1,6 +1,7 @@
+from typing import Optional
+
 from contextlib import contextmanager
 import sqlite3
-from typing import Optional
 
 
 class DatabaseManager:
@@ -108,11 +109,7 @@ class InMemoryDatabaseManager(DatabaseManager):
     """Specialized database manager for in-memory databases."""
 
     def __init__(self):
-        super().__init__(None)  # Force in-memory database
-
-    def is_in_memory(self) -> bool:
-        """Check if this is an in-memory database."""
-        return True
+        super().__init__(None)  # in-memory database
 
 
 class FileDatabaseManager(DatabaseManager):
@@ -122,7 +119,3 @@ class FileDatabaseManager(DatabaseManager):
         if db_path is None:
             raise ValueError("File database manager requires a valid db_path")
         super().__init__(db_path)
-
-    def is_in_memory(self) -> bool:
-        """Check if this is an in-memory database."""
-        return False

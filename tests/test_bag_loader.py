@@ -14,39 +14,16 @@ from rosout_mcp.bag_loader import BagLoader
 class TestBagLoader:
     """Test class for BagLoader"""
 
-
     def test_init_with_valid_params(self, in_memory_db):
         """Test initialization with valid parameters"""
         loader = BagLoader("/path/to/bag", in_memory_db)
         assert loader.bag_path == "/path/to/bag"
         assert loader.db_manager == in_memory_db
 
-
     def test_init_with_none_db_manager(self):
         """Test initialization error with None database manager"""
         with pytest.raises(ValueError, match="db_manager is required"):
             BagLoader("/path/to/bag", None)
-
-
-    def test_clear_db(self, in_memory_db, sample_log_data):
-        """Test _clear_db method"""
-        from conftest import insert_sample_data
-
-        # Insert data
-        insert_sample_data(in_memory_db, sample_log_data)
-
-        # Verify data exists
-        result = in_memory_db.execute("SELECT COUNT(*) FROM logs")
-        assert result[0][0] == len(sample_log_data)
-
-        # Create BagLoader and execute clear
-        loader = BagLoader("/path/to/bag", in_memory_db)
-        loader._clear_db()
-
-        # Verify data has been cleared
-        result = in_memory_db.execute("SELECT COUNT(*) FROM logs")
-        assert result[0][0] == 0
-
 
     @patch('rosout_mcp.bag_loader.os.path.exists')
     @patch('rosout_mcp.bag_loader.rosbag2_py.SequentialReader')
@@ -128,7 +105,6 @@ class TestBagLoader:
         assert result[0][2] == 20  # level
         assert result[0][3] == "Test message 1"  # message
 
-
     @patch('rosout_mcp.bag_loader.os.path.exists')
     def test_convert_with_nonexistent_path(self, mock_exists, in_memory_db):
         """Test conversion with nonexistent path"""
@@ -139,7 +115,6 @@ class TestBagLoader:
         # Should raise FileNotFoundError when path doesn't exist
         with pytest.raises(FileNotFoundError, match="Bag path does not exist: /nonexistent/path"):
             loader.convert()
-
 
     @patch('rosout_mcp.bag_loader.os.path.exists')
     @patch('rosout_mcp.bag_loader.rosbag2_py.SequentialReader')
@@ -166,7 +141,6 @@ class TestBagLoader:
         result = in_memory_db.execute("SELECT COUNT(*) FROM logs")
         assert result[0][0] == original_count
 
-
     @patch('rosout_mcp.bag_loader.os.path.exists')
     @patch('rosout_mcp.bag_loader.rosbag2_py.SequentialReader')
     def test_convert_clear_existing_true(self, mock_reader_class, mock_exists, in_memory_db, sample_log_data):
@@ -190,7 +164,6 @@ class TestBagLoader:
         # Verify data has been cleared
         result = in_memory_db.execute("SELECT COUNT(*) FROM logs")
         assert result[0][0] == 0
-
 
     @patch('rosout_mcp.bag_loader.os.path.exists')
     @patch('rosout_mcp.bag_loader.rosbag2_py.SequentialReader')
@@ -219,14 +192,14 @@ class TestBagLoader:
         result = in_memory_db.execute("SELECT COUNT(*) FROM logs")
         assert result[0][0] == 0
 
-
     def test_convert_with_transaction_error(self, in_memory_db):
         """Test transaction error handling"""
         loader = BagLoader("/path/to/bag", in_memory_db)
 
         # Mock rosbag2_py import to raise ImportError
         with patch('rosout_mcp.bag_loader.rosbag2_py') as mock_rosbag2:
-            mock_rosbag2.StorageOptions.side_effect = ImportError("rosbag2_py not available")
+            mock_rosbag2.StorageOptions.side_effect = ImportError(
+                "rosbag2_py not available")
 
             with patch('rosout_mcp.bag_loader.os.path.exists', return_value=True):
                 # Should raise ImportError when rosbag2_py is not available

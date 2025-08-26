@@ -34,6 +34,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ```sh
 cd /path/to/rosout_mcp
+uv pip install -e .
 npx @modelcontextprotocol/inspector uv run rosout-mcp
 
 Starting MCP inspector...

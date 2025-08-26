@@ -1,19 +1,32 @@
 import os
+from typing import Optional
 
 from mcp.server.fastmcp import FastMCP
-from typing import Optional
 
 from .bag_loader import BagLoader
 from .db_manager import InMemoryDatabaseManager
 from .sqlite_query import SQLiteQuery
 
-# MCP server for managing ROS2 log database operations (in-memory version)
-# Provides tools for loading rosbag data, initializing database, and searching logs
+# MCP server for managing ROS2 log database operations (in-memory)
+# Provides tools for loading rosbag data and searching logs
 app = FastMCP("rosout_db_server")
 
 # Global in-memory database manager instance
 # This ensures all operations share the same in-memory database
 db_manager = InMemoryDatabaseManager()
+
+
+def _handle_error(operation: str, error: Exception) -> dict:
+    """Helper function to handle errors consistently."""
+    return {
+        "status": "error",
+        "message": f"Failed to {operation}: {str(error)}"
+    }
+
+
+def _normalize_empty_strings(**search_params) -> dict:
+    """Convert empty string parameters to None."""
+    return {key: None if value == "" else value for key, value in search_params.items()}
 
 
 @app.tool()
@@ -44,16 +57,15 @@ def rosbag_load(bag_path: str) -> dict:
         # Get database status after loading
         sql_query = SQLiteQuery(db_manager)
         try:
-            record_count, (min_time,
-                           max_time), unique_nodes = sql_query.get_database_status()
+            status = sql_query.get_database_status()
             db_status_info = {
                 "status": "success",
-                "record_count": record_count,
+                "record_count": status.record_count,
                 "time_range": {
-                    "min_timestamp": min_time,
-                    "max_timestamp": max_time
+                    "min_timestamp": status.min_timestamp,
+                    "max_timestamp": status.max_timestamp
                 },
-                "unique_nodes": unique_nodes
+                "unique_nodes": status.unique_nodes
             }
         except Exception as e:
             db_status_info = {
@@ -68,10 +80,7 @@ def rosbag_load(bag_path: str) -> dict:
         }
 
     except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Failed to load rosbag: {str(e)}"
-        }
+        return _handle_error("load rosbag", e)
 
 
 @app.tool()
@@ -95,10 +104,7 @@ def db_init() -> dict:
         }
 
     except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Failed to initialize database: {str(e)}"
-        }
+        return _handle_error("initialize database", e)
 
 
 @app.tool()
@@ -128,22 +134,8 @@ def db_search(
         Dictionary containing search results with status, count, and log data
     """
     try:
-        # Handle empty string parameters by converting them to None
-        if min_level == "":
-            min_level = None
-        if max_level == "":
-            max_level = None
-        if start_time == "":
-            start_time = None
-        if end_time == "":
-            end_time = None
-        if node == "":
-            node = None
-        if message == "":
-            message = None
-
-        sql_query = SQLiteQuery(db_manager)
-        results = sql_query.search(
+        # Normalize empty string parameters
+        normalized_params = _normalize_empty_strings(
             start_time=start_time,
             end_time=end_time,
             node=node,
@@ -151,6 +143,9 @@ def db_search(
             max_level=max_level,
             message=message
         )
+
+        sql_query = SQLiteQuery(db_manager)
+        results = sql_query.search(**normalized_params)
 
         # Convert tuple results to more readable format
         formatted_results = []
@@ -169,10 +164,7 @@ def db_search(
         }
 
     except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Failed to search database: {str(e)}"
-        }
+        return _handle_error("search database", e)
 
 
 @app.tool()
@@ -185,19 +177,16 @@ def node_list() -> dict:
     """
     try:
         sql_query = SQLiteQuery(db_manager)
-        node_list = sql_query.get_node_list()
+        unique_nodes = sql_query.get_node_list()
 
         return {
             "status": "success",
-            "node_count": len(node_list),
-            "nodes": node_list
+            "node_count": len(unique_nodes),
+            "nodes": unique_nodes
         }
 
     except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Failed to get node list: {str(e)}"
-        }
+        return _handle_error("get node list", e)
 
 
 @app.tool()
@@ -212,24 +201,20 @@ def db_status() -> dict:
     """
     try:
         sql_query = SQLiteQuery(db_manager)
-        record_count, (min_time,
-                       max_time), unique_nodes = sql_query.get_database_status()
+        status = sql_query.get_database_status()
 
         return {
             "status": "success",
-            "record_count": record_count,
+            "record_count": status.record_count,
             "time_range": {
-                "min_timestamp": min_time,
-                "max_timestamp": max_time
+                "min_timestamp": status.min_timestamp,
+                "max_timestamp": status.max_timestamp
             },
-            "unique_nodes": unique_nodes
+            "unique_nodes": status.unique_nodes
         }
 
     except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Failed to get database status: {str(e)}"
-        }
+        return _handle_error("get database status", e)
 
 
 def main():
