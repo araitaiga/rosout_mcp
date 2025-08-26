@@ -3,7 +3,6 @@
 1. Add this mcp server to your mcp.json as follows:  
 
 ```json
-// mcp.json
 {
   "mcpServers": {
     "rosout_db_server": {
@@ -14,7 +13,6 @@
         "rosout-mcp"
       ]
     },
-    // others
   }
 }
 ```
