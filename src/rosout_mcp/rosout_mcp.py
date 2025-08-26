@@ -41,9 +41,30 @@ def rosbag_load(bag_path: str) -> dict:
         # Use clear_existing=False to append data without clearing existing records
         loader.convert(clear_existing=False)
 
+        # Get database status after loading
+        sql_query = SQLiteQuery(db_manager)
+        try:
+            record_count, (min_time,
+                           max_time), unique_nodes = sql_query.get_database_status()
+            db_status_info = {
+                "status": "success",
+                "record_count": record_count,
+                "time_range": {
+                    "min_timestamp": min_time,
+                    "max_timestamp": max_time
+                },
+                "unique_nodes": unique_nodes
+            }
+        except Exception as e:
+            db_status_info = {
+                "status": "error",
+                "message": f"Failed to get database status: {str(e)}"
+            }
+
         return {
             "status": "success",
-            "message": f"Successfully loaded rosbag from {bag_path} to in-memory database"
+            "message": f"Successfully loaded rosbag from {bag_path} to in-memory database",
+            "database_status": db_status_info
         }
 
     except Exception as e:
@@ -107,6 +128,20 @@ def db_search(
         Dictionary containing search results with status, count, and log data
     """
     try:
+        # Handle empty string parameters by converting them to None
+        if min_level == "":
+            min_level = None
+        if max_level == "":
+            max_level = None
+        if start_time == "":
+            start_time = None
+        if end_time == "":
+            end_time = None
+        if node == "":
+            node = None
+        if message == "":
+            message = None
+
         sql_query = SQLiteQuery(db_manager)
         results = sql_query.search(
             start_time=start_time,
@@ -141,49 +176,6 @@ def db_search(
 
 
 @app.tool()
-def db_status() -> dict:
-    """
-    Get in-memory database status and information.
-
-    Provides information about database record count and basic statistics.
-
-    Returns:
-        Dictionary containing database status and statistics
-    """
-    try:
-        sql_query = SQLiteQuery(db_manager)
-
-        # Get total record count
-        results = sql_query._execute("SELECT COUNT(*) FROM logs")
-        record_count = results[0][0] if results else 0
-
-        # Get time range
-        time_results = sql_query._execute(
-            "SELECT MIN(timestamp), MAX(timestamp) FROM logs"
-        )
-        min_time, max_time = time_results[0] if time_results else (None, None)
-
-        # Get unique nodes
-        unique_nodes = sql_query.get_node_list()
-
-        return {
-            "status": "success",
-            "record_count": record_count,
-            "time_range": {
-                "min_timestamp": min_time,
-                "max_timestamp": max_time
-            },
-            "unique_nodes": unique_nodes
-        }
-
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Failed to get database status: {str(e)}"
-        }
-
-
-@app.tool()
 def node_list() -> dict:
     """
     Get a list of unique node names from the database.
@@ -205,6 +197,38 @@ def node_list() -> dict:
         return {
             "status": "error",
             "message": f"Failed to get node list: {str(e)}"
+        }
+
+
+@app.tool()
+def db_status() -> dict:
+    """
+    Get in-memory database status and information.
+
+    Provides information about database record count and basic statistics.
+
+    Returns:
+        Dictionary containing database status and statistics
+    """
+    try:
+        sql_query = SQLiteQuery(db_manager)
+        record_count, (min_time,
+                       max_time), unique_nodes = sql_query.get_database_status()
+
+        return {
+            "status": "success",
+            "record_count": record_count,
+            "time_range": {
+                "min_timestamp": min_time,
+                "max_timestamp": max_time
+            },
+            "unique_nodes": unique_nodes
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to get database status: {str(e)}"
         }
 
 

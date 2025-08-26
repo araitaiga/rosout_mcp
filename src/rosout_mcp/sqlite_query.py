@@ -96,3 +96,26 @@ class SQLiteQuery:
         """
         results = self._execute("SELECT DISTINCT node FROM logs ORDER BY node")
         return [row[0] for row in results]
+
+    def get_database_status(self) -> tuple[int, tuple[int | None, int | None], list[str]]:
+        """
+        Get in-memory database status and information.
+
+        Returns:
+            Tuple containing (record_count, (min_timestamp, max_timestamp), unique_nodes)
+        """
+        # Get total record count
+        results = self._execute("SELECT COUNT(*) FROM logs")
+        record_count = results[0][0] if results else 0
+
+        # Get time range
+        time_results = self._execute(
+            "SELECT MIN(timestamp), MAX(timestamp) FROM logs"
+        )
+        min_time, max_time = time_results[0] if time_results else (
+            None, None)
+
+        # Get unique nodes
+        unique_nodes = self.get_node_list()
+
+        return record_count, (min_time, max_time), unique_nodes
