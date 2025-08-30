@@ -3,15 +3,14 @@ Common fixtures and helper functions for testing
 """
 import os
 from pathlib import Path
-import tempfile
 import sys
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+import tempfile
 
 import pytest
 
-from rosout_mcp.db_manager import FileDatabaseManager
 from rosout_mcp.db_manager import InMemoryDatabaseManager
 
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 
 @pytest.fixture
@@ -28,7 +27,7 @@ def temp_file_db():
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as temp_file:
         temp_path = temp_file.name
 
-    db_manager = FileDatabaseManager(temp_path)
+    db_manager = InMemoryDatabaseManager(temp_path)
     yield db_manager
     db_manager.close()
 

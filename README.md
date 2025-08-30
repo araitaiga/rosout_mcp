@@ -1,4 +1,4 @@
-# ROS2 Rosout  Log MCP Server
+# ROS2 Rosout Log MCP Server
 
 [![Test](https://github.com/araitaiga/rosout_mcp/actions/workflows/test.yml/badge.svg)](https://github.com/araitaiga/rosout_mcp/actions/workflows/test.yml)
 [![codecov](https://codecov.io/gh/araitaiga/rosout_mcp/branch/main/graph/badge.svg)](https://codecov.io/gh/araitaiga/rosout_mcp)
@@ -15,9 +15,9 @@ This package provides:
 
 ## Prerequisites
 
+- **Python**: >= 3.10
 - **uv**: Fast Python package manager and installer
-- **Python**: >= 3.12
-- **ROS2**: For generating rosbag files (optional, if you have existing rosbag files)
+- **ROS2**
 
 ## Installation
 
