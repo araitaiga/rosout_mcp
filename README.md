@@ -13,21 +13,23 @@ This package provides:
 - Build an in-memory SQLite database for efficient querying
 - Search and filter logs by time range, node name, log level, and message content
 
-## Prerequisites
+## Setup
+
+### Local execution
+
+#### Prerequisites
 
 - **Python**: >= 3.10
-- **uv**: Fast Python package manager and installer
+- **uv**
 - **ROS2**
 
-## Installation
-
-### Install uv
+#### Install uv
 
 ```sh
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-### Install Rosout MCP from GitHub
+#### Run Rosout MCP from GitHub
 
 Add this MCP server to your `mcp.json` configuration:
 
@@ -71,10 +73,34 @@ Add this MCP server to your `mcp.json` configuration:
 
 For local development and debugging:
 
+- To start using the local repository source code:  
+[Required]: npm and node  
+
 ```sh
+# clone rosout_mcp
 cd /path/to/rosout_mcp
 uv pip install -e .
 npx @modelcontextprotocol/inspector uv run rosout-mcp
+```
+
+- To start using the GitHub source code:  
+[Required]: npm and node  
+
+```sh
+npx @modelcontextprotocol/inspector uvx --from git+https://github.com/araitaiga/rosout_mcp rosout-mcp
+```
+
+- To start using Docker
+
+```sh
+cd /path/to/rosout_mcp/docker
+
+# Build and run the MCP server
+./build_run.sh
+
+# Or run with specific options:
+./build_run.sh inspector   # Start MCP inspector
+./build_run.sh bash        # Start bash shell
 ```
 
 This will start the MCP inspector at `http://localhost:6274` where you can:
