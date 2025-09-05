@@ -8,9 +8,9 @@ import tempfile
 
 import pytest
 
-from rosout_mcp.db_manager import InMemoryDatabaseManager
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+from rosout_mcp.db_manager import InMemoryDatabaseManager
 
 
 @pytest.fixture
