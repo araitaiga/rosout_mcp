@@ -1,6 +1,6 @@
 #!/bin/bash
 # Set the local bag directory
-LOCAL_BAG_DIR=${PWD}/../bags
+LOCAL_BAG_DIR=${PWD}/bags
 
 docker build -t rosout-mcp .
 

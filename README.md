@@ -15,7 +15,40 @@ This package provides:
 
 ## Setup
 
-### Local execution
+### Run with Docker (Recommended)
+
+#### Prerequisites
+
+- **Docker**
+
+#### Run Rosout MCP
+
+To run the MCP server using the Docker Hub image, add the following to your `mcp.json` configuration:
+
+```json
+{
+  "mcpServers": {
+    "rosout_db_server": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--net=host",
+        "--mount",
+        "type=bind,src=${LOCAL_BAG_DIR},dst=${LOCAL_BAG_DIR},readonly",
+        "araitaiga/rosout-mcp:latest"
+      ]
+    }
+  }
+}
+```
+
+**Note**: Replace `${LOCAL_BAG_DIR}` with the actual path to the directory containing your rosbag files.
+
+<https://hub.docker.com/repository/docker/araitaiga/rosout-mcp/general>
+
+### Run with uv
 
 #### Prerequisites
 
@@ -29,9 +62,11 @@ This package provides:
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-#### Run Rosout MCP from GitHub
+#### Run Rosout MCP
 
 Add this MCP server to your `mcp.json` configuration:
+
+- If you use Jazzy (python: 3.12)  
 
 ```json
 {
@@ -39,6 +74,25 @@ Add this MCP server to your `mcp.json` configuration:
     "rosout_db_server": {
       "command": "uvx",
       "args": [
+        "--python 3.12",
+        "--from",
+        "git+https://github.com/araitaiga/rosout_mcp",
+        "rosout-mcp"
+      ]
+    }
+  }
+}
+```
+
+- If you use Humble (python: 3.10)
+
+```json
+{
+  "mcpServers": {
+    "rosout_db_server": {
+      "command": "uvx",
+      "args": [
+        "--python 3.10",
         "--from",
         "git+https://github.com/araitaiga/rosout_mcp",
         "rosout-mcp"
@@ -90,7 +144,7 @@ npx @modelcontextprotocol/inspector uv run rosout-mcp
 npx @modelcontextprotocol/inspector uvx --from git+https://github.com/araitaiga/rosout_mcp rosout-mcp
 ```
 
-- To start using Docker
+- To start using Docker (Local Dockerfile)
 
 ```sh
 cd /path/to/rosout_mcp/docker
@@ -101,6 +155,18 @@ cd /path/to/rosout_mcp/docker
 # Or run with specific options:
 ./build_run.sh inspector   # Start MCP inspector
 ./build_run.sh bash        # Start bash shell
+```
+
+- To start using Docker (Docker Hub)
+
+```sh
+# Pull the image from Docker Hub
+# Start MCP inspector
+LOCAL_BAG_DIR=/path/to/your/bag
+docker run -it --net host --rm --name rosout-mcp-container \
+  --mount type=bind,src=${LOCAL_BAG_DIR},dst=${LOCAL_BAG_DIR},readonly \
+  araitaiga/rosout-mcp:latest \
+  npx @modelcontextprotocol/inspector uvx --from git+https://github.com/araitaiga/rosout_mcp rosout-mcp
 ```
 
 This will start the MCP inspector at `http://localhost:6274` where you can:

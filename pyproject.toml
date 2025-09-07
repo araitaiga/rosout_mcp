@@ -12,6 +12,13 @@ dependencies = [
     "pyyaml>=6.0.0",
 ]
 
+[project.scripts]
+rosout-mcp = "rosout_mcp.rosout_mcp:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 # For testing
 [project.optional-dependencies]
 test = [
@@ -20,9 +27,6 @@ test = [
     "pytest-cov>=4.0.0",
     "pytest-mock>=3.10.0",
 ]
-
-[project.scripts]
-rosout-mcp = "rosout_mcp.rosout_mcp:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
