@@ -8,7 +8,6 @@ import tempfile
 
 import pytest
 
-
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from rosout_mcp.db_manager import InMemoryDatabaseManager
 
@@ -50,9 +49,5 @@ def sample_log_data():
 
 def insert_sample_data(db_manager, sample_data):
     """Helper function to insert sample data into database"""
-    with db_manager.transaction() as cursor:
-        for timestamp, node, level, message in sample_data:
-            cursor.execute(
-                "INSERT INTO logs (timestamp, node, level, message) VALUES (?, ?, ?, ?)",
-                (timestamp, node, level, message)
-            )
+    for timestamp, node, level, message in sample_data:
+        db_manager.add_log(timestamp, node, level, message)

@@ -36,7 +36,7 @@ To run the MCP server using the Docker Hub image, add the following to your `mcp
         "--rm",
         "--net=host",
         "--mount",
-        "type=bind,src=${LOCAL_BAG_DIR},dst=${LOCAL_BAG_DIR},readonly",
+        "type=bind,src=<LOCAL_BAG_DIR>,dst=<LOCAL_BAG_DIR>,readonly",
         "araitaiga/rosout-mcp:latest"
       ]
     }
@@ -44,7 +44,7 @@ To run the MCP server using the Docker Hub image, add the following to your `mcp
 }
 ```
 
-**Note**: Replace `${LOCAL_BAG_DIR}` with the actual path to the directory containing your rosbag files.
+**Note**: Replace `<LOCAL_BAG_DIR>` with the actual path to the directory containing your rosbag files.
 
 <https://hub.docker.com/repository/docker/araitaiga/rosout-mcp/general>
 

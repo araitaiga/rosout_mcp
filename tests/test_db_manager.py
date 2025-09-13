@@ -68,35 +68,14 @@ class TestDatabaseManager:
         assert result[0][0] == 0
 
     @pytest.mark.unit
-    def test_transaction_success(self, in_memory_db):
-        """Test transaction success case"""
-        with in_memory_db.transaction() as cursor:
-            cursor.execute(
-                "INSERT INTO logs (timestamp, node, level, message) VALUES (?, ?, ?, ?)",
-                (1234567890, "test_node", 20, "test message")
-            )
+    def test_add_log_multiple(self, in_memory_db):
+        """Test multiple add_log calls"""
+        in_memory_db.add_log(1234567890, "test_node_1", 20, "test message 1")
+        in_memory_db.add_log(1234567891, "test_node_2", 30, "test message 2")
 
-        # Verify data was inserted correctly
+        # Verify both records were inserted
         result = in_memory_db.execute("SELECT COUNT(*) FROM logs")
-        assert result[0][0] == 1
-
-    @pytest.mark.unit
-    def test_transaction_rollback(self, in_memory_db):
-        """Test transaction rollback"""
-        try:
-            with in_memory_db.transaction() as cursor:
-                cursor.execute(
-                    "INSERT INTO logs (timestamp, node, level, message) VALUES (?, ?, ?, ?)",
-                    (1234567890, "test_node", 20, "test message")
-                )
-                # Intentionally raise an error
-                raise Exception("Test exception")
-        except Exception:
-            pass
-
-        # Verify rollback occurred and data was not inserted
-        result = in_memory_db.execute("SELECT COUNT(*) FROM logs")
-        assert result[0][0] == 0
+        assert result[0][0] == 2
 
     @pytest.mark.unit
     def test_execute_with_params(self, in_memory_db, sample_log_data):
@@ -176,11 +155,8 @@ class TestFileDatabaseManager:
         try:
             # Insert data with first database connection
             with FileDatabaseManager(temp_path) as db_manager1:
-                with db_manager1.transaction() as cursor:
-                    cursor.execute(
-                        "INSERT INTO logs (timestamp, node, level, message) VALUES (?, ?, ?, ?)",
-                        (1234567890, "test_node", 20, "test message")
-                    )
+                db_manager1.add_log(
+                    1234567890, "test_node", 20, "test message")
 
             # Verify data persistence with new connection
             with FileDatabaseManager(temp_path) as db_manager2:

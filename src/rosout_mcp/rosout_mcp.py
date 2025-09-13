@@ -125,10 +125,10 @@ def db_search(
     Args:
         start_time: Start time filter in nanoseconds (ignored if None)
         end_time: End time filter in nanoseconds (ignored if None)
-        node: Filter by exact node name match (ignored if None)
+        node: Filter by exact node name match (ignored if None). Requires quotes to be interpreted as str
         min_level: Minimum log level inclusive (ignored if None)
         max_level: Maximum log level inclusive (ignored if None)
-        message: Keyword to search in message content (ignored if None)
+        message: Keyword to search in message content (ignored if None). Requires quotes to be interpreted as str
 
     Returns:
         Dictionary containing search results with status, count, and log data

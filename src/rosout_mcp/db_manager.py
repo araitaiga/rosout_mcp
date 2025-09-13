@@ -1,6 +1,5 @@
 from typing import Optional
 
-from contextlib import contextmanager
 import sqlite3
 
 
@@ -57,16 +56,22 @@ class DatabaseManager:
             cursor.execute("DELETE FROM logs")
             self.connection.commit()
 
-    @contextmanager
-    def transaction(self):
-        """Context manager for database transactions."""
+    def add_log(self, timestamp: int, node: str, level: int, message: str):
+        """
+        Add a single log entry to the database.
+
+        Args:
+            timestamp: Log timestamp in nanoseconds
+            node: Node name that generated the log
+            level: Log level (integer)
+            message: Log message content
+        """
         cursor = self.connection.cursor()
-        try:
-            yield cursor
-            self.connection.commit()
-        except Exception:
-            self.connection.rollback()
-            raise
+        cursor.execute(
+            "INSERT INTO logs (timestamp, node, level, message) VALUES (?, ?, ?, ?)",
+            (timestamp, node, level, message)
+        )
+        self.connection.commit()
 
     def execute(self, query: str, params=None):
         """Execute a query and return results."""
