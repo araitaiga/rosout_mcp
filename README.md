@@ -1,4 +1,4 @@
-# ROS2 Rosout Log MCP Server
+# ROS2 Rosout Rosbag MCP Server
 
 [![Test](https://github.com/araitaiga/rosout_mcp/actions/workflows/test.yml/badge.svg)](https://github.com/araitaiga/rosout_mcp/actions/workflows/test.yml)
 [![codecov](https://codecov.io/gh/araitaiga/rosout_mcp/branch/main/graph/badge.svg)](https://codecov.io/gh/araitaiga/rosout_mcp)
