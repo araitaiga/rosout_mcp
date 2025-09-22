@@ -23,11 +23,6 @@ def _handle_error(operation: str, error: Exception) -> dict:
     }
 
 
-def _normalize_empty_strings(**search_params) -> dict:
-    """Convert empty string parameters to None."""
-    return {key: None if value == "" else value for key, value in search_params.items()}
-
-
 @app.tool()
 def rosbag_load(bag_path: str) -> dict:
     """
@@ -63,6 +58,10 @@ def rosbag_load(bag_path: str) -> dict:
                 "time_range": {
                     "min_timestamp": status.min_timestamp,
                     "max_timestamp": status.max_timestamp
+                },
+                "level_range": {
+                    "min_level": status.min_level,
+                    "max_level": status.max_level
                 },
                 "unique_nodes": status.unique_nodes
             }
@@ -138,19 +137,35 @@ def db_search(
     time range, node name, log levels, and message content search.
 
     Args:
-        start_time: Start time filter in nanoseconds (ignored if None)
-        end_time: End time filter in nanoseconds (ignored if None)
-        node: Filter by exact node name match (ignored if None). Requires quotes to be interpreted as str
-        min_level: Minimum log level inclusive (ignored if None)
-        max_level: Maximum log level inclusive (ignored if None)
-        message: Keyword to search in message content (ignored if None). Requires quotes to be interpreted as str
+        start_time: Start time filter in nanoseconds. (Use -1 to ignore)
+        end_time: End time filter in nanoseconds. (Use -1 to ignore)
+        node: Filter by exact node name match. (Use empty string to ignore)
+        min_level: Minimum log level inclusive. (Use -1 to ignore)
+                   Log levels: 10=DEBUG, 20=INFO, 30=WARN, 40=ERROR, 50=FATAL
+        max_level: Maximum log level inclusive. (Use -1 to ignore)
+                   Log levels: 10=DEBUG, 20=INFO, 30=WARN, 40=ERROR, 50=FATAL
+        message: Keyword to search in message content. (Use empty string to ignore)
 
     Returns:
         Dictionary containing search results with status, count, and log data
     """
     try:
-        # Normalize empty string parameters
-        normalized_params = _normalize_empty_strings(
+        # TODO: Optional parameters cannot be used in Cursor MCP client.
+        if start_time == -1:
+            start_time = None
+        if end_time == -1:
+            end_time = None
+        if min_level == -1:
+            min_level = None
+        if max_level == -1:
+            max_level = None
+        if node == "":
+            node = None
+        if message == "":
+            message = None
+
+        sql_query = SQLiteQuery(db_manager)
+        results = sql_query.search(
             start_time=start_time,
             end_time=end_time,
             node=node,
@@ -158,9 +173,6 @@ def db_search(
             max_level=max_level,
             message=message
         )
-
-        sql_query = SQLiteQuery(db_manager)
-        results = sql_query.search(**normalized_params)
 
         # Convert tuple results to more readable format
         formatted_results = []
@@ -224,6 +236,10 @@ def db_status() -> dict:
             "time_range": {
                 "min_timestamp": status.min_timestamp,
                 "max_timestamp": status.max_timestamp
+            },
+            "level_range": {
+                "min_level": status.min_level,
+                "max_level": status.max_level
             },
             "unique_nodes": status.unique_nodes
         }

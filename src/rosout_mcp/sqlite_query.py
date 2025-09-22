@@ -8,6 +8,8 @@ class DatabaseStatus(NamedTuple):
     record_count: int
     min_timestamp: int | None
     max_timestamp: int | None
+    min_level: int | None
+    max_level: int | None
     unique_nodes: List[str]
 
 
@@ -110,7 +112,7 @@ class SQLiteQuery:
         Get in-memory database status and information.
 
         Returns:
-            Tuple containing (record_count, (min_timestamp, max_timestamp), unique_nodes)
+            Tuple containing (record_count, (min_timestamp, max_timestamp), (min_level, max_level), unique_nodes)
         """
         # Get total record count
         results = self._execute("SELECT COUNT(*) FROM logs")
@@ -123,7 +125,14 @@ class SQLiteQuery:
         min_time, max_time = time_results[0] if time_results else (
             None, None)
 
+        # Get level range
+        level_results = self._execute(
+            "SELECT MIN(level), MAX(level) FROM logs"
+        )
+        min_level, max_level = level_results[0] if level_results else (
+            None, None)
+
         # Get unique nodes
         unique_nodes = self.get_node_list()
 
-        return DatabaseStatus(record_count, min_time, max_time, unique_nodes)
+        return DatabaseStatus(record_count, min_time, max_time, min_level, max_level, unique_nodes)
