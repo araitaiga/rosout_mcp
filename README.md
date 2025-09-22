@@ -7,8 +7,7 @@ A Model Context Protocol (MCP) server that loads ROS2 rosbag files containing lo
 
 ## Overview
 
-<video src="./images/rosout_mcp_sample.webm" controls width="600">
-</video>
+![Demo](./images/rosout_mcp_sample.gif)
 
 This package provides:
 
