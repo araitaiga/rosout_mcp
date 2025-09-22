@@ -3,7 +3,7 @@
 [![Test](https://github.com/araitaiga/rosout_mcp/actions/workflows/test.yml/badge.svg)](https://github.com/araitaiga/rosout_mcp/actions/workflows/test.yml)
 [![codecov](https://codecov.io/gh/araitaiga/rosout_mcp/branch/main/graph/badge.svg)](https://codecov.io/gh/araitaiga/rosout_mcp)
 
-A Model Context Protocol (MCP) server that loads ROS2 rosbag files containing log information, builds an in-memory database, and provides SQL-like querying capabilities for ROS2 rosout logs.
+A Model Context Protocol (MCP) server that loads ROS2 rosbag files containing log information (/rosout), builds an in-memory database, and provides SQL-like querying capabilities.
 
 ## Overview
 
@@ -118,6 +118,9 @@ Add this MCP server to your `mcp.json` configuration:
    - Example request: "Based on the rosbag from [your rosbag path], determine if there are any issues in the implementation of the node in this workspace."
 
 ![request_example](./images/rosout_mcp_request.png)
+
+sample user code repository  
+<https://github.com/araitaiga/rosout_mcp_usecase>
 
 ## Available MCP Tools
 
