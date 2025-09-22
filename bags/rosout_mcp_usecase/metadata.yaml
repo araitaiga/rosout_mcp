@@ -1,0 +1,44 @@
+rosbag2_bagfile_information:
+  version: 9
+  storage_identifier: mcap
+  duration:
+    nanoseconds: 21729967287
+  starting_time:
+    nanoseconds_since_epoch: 1758525424089269289
+  message_count: 46
+  topics_with_message_count:
+    - topic_metadata:
+        name: /rosout
+        type: rcl_interfaces/msg/Log
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: transient_local
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 10
+              nsec: 0
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_e28ce254ca8abc06abf92773b74602cdbf116ed34fbaf294fb9f81da9f318eac
+      message_count: 46
+  compression_format: ""
+  compression_mode: ""
+  relative_file_paths:
+    - rosout_mcp_usecase_0.mcap
+  files:
+    - path: rosout_mcp_usecase_0.mcap
+      starting_time:
+        nanoseconds_since_epoch: 1758525424089269289
+      duration:
+        nanoseconds: 21729967287
+      message_count: 46
+  custom_data: ~
+  ros_distro: jazzy

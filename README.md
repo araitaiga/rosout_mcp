@@ -7,6 +7,9 @@ A Model Context Protocol (MCP) server that loads ROS2 rosbag files containing lo
 
 ## Overview
 
+<video src="./images/rosout_mcp_sample.webm" controls width="600">
+</video>
+
 This package provides:
 
 - Load ROS2 rosbag files containing `/rosout` topic data
@@ -113,7 +116,9 @@ Add this MCP server to your `mcp.json` configuration:
    ```
 
 4. **Use MCP client** to analyze the recorded data:
-   - Example request: "Based on the rosbag output path from [your rosbag path], determine if there are any issues in the implementation of the node in this workspace."
+   - Example request: "Based on the rosbag from [your rosbag path], determine if there are any issues in the implementation of the node in this workspace."
+
+![request_example](./images/rosout_mcp_request.png)
 
 ## Available MCP Tools
 
