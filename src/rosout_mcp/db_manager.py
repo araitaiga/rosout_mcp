@@ -1,5 +1,3 @@
-from typing import Optional
-
 import sqlite3
 
 
@@ -9,7 +7,7 @@ class DatabaseManager:
     This allows sharing the same database instance between multiple components.
     """
 
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self, db_path: str | None = None):
         """
         Initialize DatabaseManager.
 

@@ -1,5 +1,4 @@
 import os
-from typing import Optional
 
 from mcp.server.fastmcp import FastMCP
 
@@ -107,14 +106,30 @@ def db_init() -> dict:
         return _handle_error("initialize database", e)
 
 
+# TODO:
+# When optional parameters are defined as shown below,
+# the Cursor MCP client cannot make requests with the correct types,
+# resulting in an "Invalid type for parameter" error.
+# As a temporary measure, make all parameters required.
+# https://forum.cursor.com/t/mcp-server-tool-calls-fail-with-invalid-type-for-parameter-in-tool/70831
+
+# def db_search(
+#     start_time: int | None = None,
+#     end_time: int | None = None,
+#     node: str | None = None,
+#     min_level: int | None = None,
+#     max_level: int | None = None,
+#     message: str | None = None,
+# ) -> dict:
+
 @app.tool()
 def db_search(
-    start_time: Optional[int] = None,
-    end_time: Optional[int] = None,
-    node: Optional[str] = None,
-    min_level: Optional[int] = None,
-    max_level: Optional[int] = None,
-    message: Optional[str] = None
+    start_time: int,
+    end_time: int,
+    node: str,
+    min_level: int,
+    max_level: int,
+    message: str,
 ) -> dict:
     """
     Search in-memory database logs with multiple filtering options.
