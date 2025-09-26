@@ -135,7 +135,7 @@ sample user code repository
 For local development and debugging:
 
 - To start using the local repository source code:  
-[Required]: npm and node  
+[Required]: ros2, npm and node  
 
 ```sh
 # clone rosout_mcp
@@ -145,11 +145,15 @@ npx @modelcontextprotocol/inspector uv run rosout-mcp
 ```
 
 - To start using the GitHub source code:  
-[Required]: npm and node  
+[Required]: ros2, npm and node  
+
+(jazzy)  
 
 ```sh
-npx @modelcontextprotocol/inspector uvx --from git+https://github.com/araitaiga/rosout_mcp rosout-mcp
+npx @modelcontextprotocol/inspector uvx --python 3.12 --from git+https://github.com/araitaiga/rosout_mcp rosout-mcp
 ```
+
+Note: You need to have ROS2 installed in your environment, and the `--python` version should match the ROS2 requirements.
 
 - To start using Docker (Local Dockerfile)
 
