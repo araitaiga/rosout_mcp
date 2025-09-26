@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-rosout-mcp = "rosout_mcp.rosout_mcp:main"
+rosout-mcp = "rosout_mcp:main"
 
 [build-system]
 requires = ["hatchling"]
